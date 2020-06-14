@@ -1687,8 +1687,14 @@ int64_t bshuf_blocked_wrap_fun(bshufBlockFunDef fun, const void* in, void* out, 
     if (block_size % BSHUF_BLOCKED_MULT) return -81;
 
 #if defined(_OPENMP)
+    char *cenv;
+    int nthreads = omp_get_num_threads();
+    cenv = getenv("BITSHUFFLE_OMP_NUM_THREADS");
+    if (cenv!=NULL) {
+      nthreads = atoi(cenv);
+    }
     #pragma omp parallel for schedule(dynamic, 1) \
-            private(count) reduction(+ : cum_count)
+            private(count) num_threads(nthreads) reduction(+ : cum_count)
 #endif
     for (ii = 0; ii < (omp_size_t)( size / block_size ); ii ++) {
         count = fun(&C, block_size, elem_size);
